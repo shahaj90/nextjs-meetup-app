@@ -1,23 +1,6 @@
+/* eslint-disable no-undef */
+import { MongoClient } from 'mongodb';
 import MeetupList from '../components/meetups/MeetupList';
-
-const DUMMY_MEETUPS = [
-  {
-    id: 'm1',
-    title: 'A First Meetup',
-    image:
-      'https://upload.wikimedia.org/wikipedia/commons/d/da/Kyiv_Symphony_Orchestra%2C_Kurhaus_Wiesbaden.jpg',
-    address: 'Some Address 5, 12345 some city',
-    description: 'This is first meetup'
-  },
-  {
-    id: 'm2',
-    title: 'A First Meetup',
-    image:
-      'https://upload.wikimedia.org/wikipedia/commons/d/da/Kyiv_Symphony_Orchestra%2C_Kurhaus_Wiesbaden.jpg',
-    address: 'Some Address 5, 12345 some city',
-    description: 'This is first meetup'
-  }
-];
 
 function HomePage(props) {
   return <MeetupList meetups={props.meetups} />;
@@ -37,10 +20,21 @@ function HomePage(props) {
 
 export async function getStaticProps() {
   // Fetch data from an API
+  const client = await MongoClient.connect(process.env.MONGODB_URI);
+  const db = client.db(process.env.DB_NAME);
+  const collection = db.collection('meetups');
+  const meetups = await collection.find().toArray();
+  client.close();
   return {
     props: {
-      meetups: DUMMY_MEETUPS
-    }
+      meetups: meetups.map((meetup) => ({
+        title: meetup.title,
+        address: meetup.address,
+        image: meetup.image,
+        id: meetup._id.toString()
+      }))
+    },
+    revalidate: 1
   };
 }
 

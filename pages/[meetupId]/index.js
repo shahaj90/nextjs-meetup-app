@@ -1,30 +1,31 @@
+/* eslint-disable no-undef */
+import { MongoClient, ObjectId } from 'mongodb';
 import MeetupDetail from '../../components/meetups/MeetupDetail';
 
-function MeetupDetails() {
+function MeetupDetails(props) {
   return (
     <MeetupDetail
-      image="https://upload.wikimedia.org/wikipedia/commons/d/da/Kyiv_Symphony_Orchestra%2C_Kurhaus_Wiesbaden.jpg"
-      title="A First Meetup"
-      address="Some Address 5, 12345 some city"
-      description="This is first meetup"
+      image={props.meetupData.image}
+      title={props.meetupData.title}
+      address={props.meetupData.address}
+      description={props.meetupData.description}
     />
   );
 }
 
 export async function getStaticPaths() {
+  const client = await MongoClient.connect(process.env.MONGODB_URI);
+  const db = client.db(process.env.DB_NAME);
+  const collection = db.collection('meetups');
+  const meetups = await collection.find({}, { _id: 1 }).toArray();
+  client.close();
+
   return {
-    paths: [
-      {
-        params: {
-          meetupId: 'm1'
-        }
-      },
-      {
-        params: {
-          meetupId: 'm2'
-        }
+    paths: meetups.map((meetup) => ({
+      params: {
+        meetupId: meetup._id.toString()
       }
-    ],
+    })),
     fallback: false
   };
 }
@@ -32,16 +33,20 @@ export async function getStaticPaths() {
 export async function getStaticProps(context) {
   // Fetch data for a single meetup
   const meetupId = context.params.meetupId;
+  const client = await MongoClient.connect(process.env.MONGODB_URI);
+  const db = client.db(process.env.DB_NAME);
+  const collection = db.collection('meetups');
+  const singleMeetup = await collection.findOne({ _id: ObjectId(meetupId) });
+  client.close();
 
   return {
     props: {
       meetupData: {
-        image:
-          'https://upload.wikimedia.org/wikipedia/commons/d/da/Kyiv_Symphony_Orchestra%2C_Kurhaus_Wiesbaden.jpg',
-        id: meetupId,
-        title: 'First Meetup',
-        address: 'Some Street 5, Some city',
-        description: 'This is a first meetup'
+        id: singleMeetup._id.toString(),
+        image: singleMeetup.image,
+        title: singleMeetup.title,
+        address: singleMeetup.address,
+        description: singleMeetup.description
       }
     }
   };
