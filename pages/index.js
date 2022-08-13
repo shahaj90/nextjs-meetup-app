@@ -10,7 +10,7 @@ const DUMMY_MEETUPS = [
     description: 'This is first meetup'
   },
   {
-    id: 'm1',
+    id: 'm2',
     title: 'A First Meetup',
     image:
       'https://upload.wikimedia.org/wikipedia/commons/d/da/Kyiv_Symphony_Orchestra%2C_Kurhaus_Wiesbaden.jpg',
